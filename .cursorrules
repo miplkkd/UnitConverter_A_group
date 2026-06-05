@@ -1,5 +1,17 @@
 # UnitConverter_Agroup — Cursor Rules
 
+## 개발 3축 (IBAC · BCE · RBS) — 항상 적용
+
+피드백·워크북 기준. 상세: `docs/IBAC-BCE-RBS.md` · `.cursor/rules/ibac-bce-rbs.mdc`
+
+| 축 | 의미 | 본 프로젝트 |
+|----|------|-------------|
+| **BCE** | Boundary → Control → Entity 아키텍처 (= 아래 **ECB**, 레이어 이름만 다름) | `src/boundary`, `src/control`, `src/entity` |
+| **IBAC** | Input·Infrastructure → Boundary → Application(control) → Core(entity) **처리 순서** | `unit:value` → CLI → 판정 → 순수 변환 |
+| **RBS** | RED → Blue/Green → Stabilize (TDD) + FR↔`D-*`/`U-*` 추적 | `/tdd-red`, GREEN/REFACTOR, `reference.md` |
+
+Agent는 매 턴 **BCE Layer** + **RBS Phase**를 선언한다. RED 중 `src/` 로직 수정 금지.
+
 ## 도메인
 - 길이 단위 변환: `meter`, `feet`, `yard` (입력 형식 `unit:value`, 예 `meter:2.5`)
 - meter 기준 비율 SSOT: `1 m = 3.28084 ft`, `1 m = 1.09361 yd`
@@ -14,8 +26,8 @@
 - `entity`/`control`은 **E001~E004를 raise/return하지 않는다** (emit은 boundary)
 - Golden Master·`tests/golden/*.approved.txt`: **본 세션 미사용**; 후속 도입 시 사용자 명시 승인 없이 AI가 갱신 금지
 
-## 아키텍처 (ECB)
-- 의존 방향: `boundary → control → entity` (역방향 import 금지)
+## 아키텍처 (ECB = BCE)
+- **BCE/ECB 동일 패턴.** 의존 방향: `boundary → control → entity` (역방향 import 금지)
 - `entity`: 변환·판정 **순수 로직**(meter 기준)만; `entity` 패키지 내부·Python stdlib만 import; `control`/`boundary` import 금지
 - `control`: 입력 검증 **판정 로직**·오케스트레이션; `entity`만 import; `boundary` import 금지
 - `boundary`: CLI/I/O·프레젠테이션·**에러 코드·메시지 emit** (로직 금지); `control`만 호출; `entity` 직접 import·호출 금지
@@ -66,3 +78,5 @@
 - 실패 테스트 제거·약화로 제출 판정만 맞추기
 - 솔루션 선행 리팩터(OCP 풀 세트)로 변환·테스트를 미루기
 - Golden Master/snapshot 파일 사용자 승인 없이 AI 갱신 (후속 세션)
+
+<!-- rules-refreshed: 2026-06-05 — IBAC·BCE·RBS + .cursor/rules/ibac-bce-rbs.mdc -->

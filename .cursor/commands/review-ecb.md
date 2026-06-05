@@ -1,6 +1,6 @@
-# ECB · 계약 리뷰 (코드 수정 금지)
+# BCE · ECB · 계약 리뷰 (코드 수정 금지)
 
-UnitConverter_Agroup · **읽기·리뷰만**. `src/`·`tests/`·`UnitConverter.py` **수정·Write·StrReplace 금지**. 헌법: `.cursorrules`
+UnitConverter_Agroup · **BCE**(=ECB) · **읽기·리뷰만**. `src/`·`tests/`·`UnitConverter.py` **수정 금지**. 헌법: `.cursorrules` · 3축: `docs/IBAC-BCE-RBS.md`
 
 ## 필수 선언
 
@@ -23,7 +23,7 @@ Phase: review | Layer: — | Track: —
 |---|------|-----------|---------|
 | 1 | **import 방향** | `boundary → control → entity`만. `entity`→`control`/`boundary` **없음**. `control`→`boundary` **없음**. `boundary`→`entity` 직접 import·호출 **없음** | `entity`가 `control` import; `boundary`가 `entity.convert` 직접 호출 |
 | 2 | **entity · E001~E005** | `entity`는 변환·순수 계산만. **E001~E005**를 raise/return/print/CLI 메시지로 **emit하지 않음**. E001~E004 **판정**도 `control` 담당 | `entity`에서 `:` 없음 시 에러 문자열; `entity`가 E005 출력 형식 검사 |
-| 3 | **int[6] · 1-index** | **본 프로젝트 N/A** (그리드·`int[6]` 계약 없음). 대체 계약: 입력 `unit:value`, 성공 시 **meter/feet/yard 3줄**·단위 표기·반올림이 **SSOT 한 곳**과 일치; 0-index/1-index 혼동으로 필드 오프셋 쓰기 **없음** | README와 다른 비율·3줄 아님·하드코딩 메시지 산재 |
+| 3 | **입출력 계약 · 3줄 SSOT** | 입력 `unit:value` (`:` 분리). 성공 시 **meter/feet/yard 3줄**·단위 표기·반올림이 **SSOT 한 곳**과 일치. README 비율 **3.28084 / 1.09361**, `feet`↔`yard`는 **meter 경유**만 | README와 다른 비율·3줄 아님·직접 ft↔yd 비율·하드코딩 메시지 산재 |
 | 4 | **MagicConstant SSOT** | `3.28084`, `1.09361`, `meter`/`feet`/`yard`, E001~E005 키·메시지가 **단일 SSOT**에서만 정의; `src/`·`tests/`에 동일 리터럴 **중복 산재 없음** (테스트는 SSOT import) | entity·test에 `3.28084` 리터럴 반복; 오류 문구가 boundary·control에 각각 하드코딩 |
 | 5 | **Logic Track · Domain Mock** | `tests/entity`, `tests/control`, `test_d_*`에 entity/control **`@patch`·Mock·Fake 도메인 대체 없음** | `test_d_conv_01`에서 `patch("entity.convert")` |
 

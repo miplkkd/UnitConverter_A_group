@@ -1,0 +1,56 @@
+---
+description: IBAC·BCE·RBS 개발 3축 — 입력~코어 레이어, BCE 아키텍처, RED-GREEN-REFACTOR·요구 추적. 항상 적용.
+alwaysApply: true
+refreshedAt: "2026-06-05"
+---
+
+# IBAC · BCE · RBS (개발 3축)
+
+본 프로젝트는 **세 축을 동시에** 따른다. 사용자가 매번 언급하지 않아도 Agent는 아래를 기본 전제로 한다.
+
+## BCE — 아키텍처 (Boundary · Control · Entity)
+
+Jacobson **ECB/BCE**와 동일. 패키지·의존 방향은 **B → C → E** (본 repo 문서의 `ECB` = 동일 패턴, 레이어 이름만 `entity|control|boundary`).
+
+| 레이어 | 역할 | 경로 |
+|--------|------|------|
+| **Boundary** | CLI/I/O, 3줄 출력, **E001~E005 emit** | `src/boundary`, `tests/boundary`, `U-*` |
+| **Control** | `unit:value` 파싱·검증 **판정**, 오케스트레이션 | `src/control`, `tests/control`, `D-PARSE-*`, `D-VAL-*` |
+| **Entity** | meter 기준 **순수 변환** (비율 SSOT) | `src/entity`, `tests/entity`, `D-CONV-*` |
+
+**금지:** 역방향 import, boundary→entity 직접 호출, entity/control에서 에러 emit.
+
+검증: `/review-ecb` · `.cursorrules` ECB 절.
+
+## IBAC — 흐름 (Input · Boundary · Application · Core)
+
+BCE를 **데이터 흐름** 관점에서 이름 붙인 것. 구현·테스트 시 항상 이 순서를 지킨다.
+
+| 단계 | 의미 | 본 프로젝트 |
+|------|------|-------------|
+| **I** — Input & Infrastructure | 입력 계약·테스트 인프라 | `unit:value`, `tests/`, Loop B import, INF-* |
+| **B** — Boundary | 외부(사용자/CLI) 접점 | `main`/boundary, `test_u_*`, stderr/stdout |
+| **A** — Application | 유스케이스·판정 (BCE의 **Control**) | parse/validate orchestration, `D-PARSE-*`, `D-VAL-*` |
+| **C** — Core | 도메인 핵심 (BCE의 **Entity**) | 변환 로직만, meter 경유, `D-CONV-*` |
+
+**규칙:** 오류는 I에서 **판정**(A), **표현**(B)만 — C는 순수 계산.
+
+## RBS — 품질 루프 (RED · Blue/Green · Stabilize)
+
+TDD 사이클 + 요구 추적. 한 기능 = **한 테스트**씩.
+
+| 단계 | 의미 | 도구 |
+|------|------|------|
+| **R** — RED | 실패 테스트 먼저, `src/` 로직 선행 금지 | `/tdd-red`, `pytest …` exit ≠ 0 |
+| **B** — Blue/Green | 최소 구현으로 Track 전체 PASS | `src/` 해당 Layer만, Logic/UI Track pytest |
+| **S** — Stabilize | REFACTOR + 스펙·헌법 유지 | 계약·assert 불변, PRD↔`reference.md` 1:1, `/review-ecb` |
+
+**요구 추적 (R):** FR-01~06 ↔ `D-*`/`U-*` — [reference.md](../skills/unitconverter-tdd/reference.md), [PRD.md](../../docs/PRD.md) §4.
+
+## Agent 기본 행동
+
+1. 코드·테스트 작업 전: **BCE 레이어** + **IBAC 흐름** + **RBS Phase** 한 줄 선언 (`Phase` · `Layer` · `Track`).
+2. 구현은 **BCE 경계** 안에서만; Phase가 RED면 `tests/`만.
+3. 세션·PR 전: Loop A/B/C, `/review-ecb`로 BCE·계약 점검.
+
+상세: `.cursorrules`, Skill `unitconverter-tdd`, [docs/IBAC-BCE-RBS.md](../../docs/IBAC-BCE-RBS.md).
