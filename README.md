@@ -78,8 +78,11 @@ UnitConverter_Agroup/
 │   └── test_convert.py
 ├── Report/
 │   └── 01.UnitConvert_ProblemDefinition_Report.md
-└── docs/
-    └── PRD.md
+├── docs/
+│   └── PRD.md
+└── prompting/
+    ├── 01.step1-mom-test-prompt.md
+    └── 02.transcript-export.md
 ```
 
 ---
@@ -142,6 +145,8 @@ python -m pytest tests/ --collect-only   # import·수집만 확인
 |------|------|
 | [Report/01.UnitConvert_ProblemDefinition_Report.md](./Report/01.UnitConvert_ProblemDefinition_Report.md) | Mom Test 인터뷰·문제 정의·Rule/Command/Test Loop |
 | [docs/PRD.md](./docs/PRD.md) | 세션 범위 PRD (FR, Non-Goals, Test Loop) |
+| [prompting/01.step1-mom-test-prompt.md](./prompting/01.step1-mom-test-prompt.md) | STEP 1 Mom Test 인터뷰 프롬프트·규칙·종료 지시 |
+| [prompting/02.transcript-export.md](./prompting/02.transcript-export.md) | 유효 세션(2개) 통합 트랜스크립트 |
 
 ---
 
