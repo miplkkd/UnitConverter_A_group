@@ -47,3 +47,12 @@ def assert_matches_golden(actual: str, relative: str) -> None:
         )
     )
     raise AssertionError(f"Golden mismatch: {relative}\n{diff}")
+
+
+def assert_cli_golden(capsys, raw: str, relative: str) -> None:
+    """run_cli(raw) stdout → golden matched (U-IN/U-OUT SSOT)."""
+    from boundary.app import run_cli
+
+    run_cli(raw)
+    captured = capsys.readouterr()
+    assert_matches_golden(captured.out, relative)
