@@ -1,16 +1,16 @@
 # UnitConverter_Agroup
 
-> Mom Test 인터뷰 기반 문제 정의 · 세션 범위 README  
-> 상세: [Report/01.UnitConvert_ProblemDefinition_Report.md](./Report/01.UnitConvert_ProblemDefinition_Report.md) · [docs/PRD.md](./docs/PRD.md)
+> Mom Test · ECB(BCE) · Dual-Track TDD · IBAC/BCE/RBS  
+> 상세: [docs/PRD.md](./docs/PRD.md) · [docs/IBAC-BCE-RBS.md](./docs/IBAC-BCE-RBS.md) · [Report/01](./Report/01.UnitConvert_ProblemDefinition_Report.md)
+
+**원격:** https://github.com/miplkkd/UnitConverter_A_group.git
 
 ---
 
 ## 이번 README 안내
 
-**이 파일은 Mom Test 워크북·문제 정의 보고서·PRD 작업 이후 갱신된 README입니다.**
-
-- **현재 유효한 안내:** 아래 「세션 개요」부터 「관련 문서」까지
-- **기존 과제 안내 (레거시):** 맨 아래 **「기존 README (Original — 레거시)」** 섹션 — 원본 과제 PDF/README 수준의 전체 요구사항. 이번 세션 범위와 다를 수 있음
+- **현재 유효:** 아래 「세션 개요」~「관련 문서」
+- **레거시:** 맨 아래 **「기존 README (Original — 레거시)」** — 원본 6시간 Activities·추가 요구 전체
 
 ---
 
@@ -18,20 +18,28 @@
 
 ### 주제 (한 문장)
 
-**과제 첫날에 변환 결과를 재현 가능하게 확인하고, import 막힘 없이 테스트가 돌아가게 만드는 것까지가 목표다.**
+**과제 첫날에 변환 결과를 재현 가능하게 확인하고, import 막힘 없이 Dual-Track pytest가 돌아가게 만든다.**
 
 ### 진짜 문제
 
-main()만 있는 시작 코드에 테스트·설계·제출 마감이 동시에 걸리면, 학생은 첫날 import·환경 막힘에 시간을 쓰고 변환은 손계산으로 대신하며, 마감 직전에는 실패한 테스트를 고치기보다 빼서 제출 판정만 맞추려 한다.
+`main()` starter + 테스트·마감이 겹치면 import 막힘·손계산·실패 테스트 제거로 이어진다.
 
-### 표면 문제 (이번 세션에서 하지 않을 것)
+### 개발 3축
 
-| 금지 / Out of Scope | 이유 |
-|---------------------|------|
-| 「OCP·SRP 완성형 단위 변환 프로그램 + pytest」만을 목표로 삼기 | 제품 정의가 실제 막힘(import·재현·제출)과 어긋남 |
-| JSON / CSV / 표 출력, 동적 단위 등록 | 인터뷰: 「시간 남으면」→ 미착수 |
-| `pip install -e .`, conftest, coverage, CI | 1일차를 환경 셋업이 잡아먹음 |
-| 실패 assert 주석 처리 후 제출 | 인터뷰: 검증 미구현 시 테스트 제거 패턴 |
+| 축 | 의미 |
+|----|------|
+| **BCE** | `boundary → control → entity` (ECB와 동일) |
+| **IBAC** | Input → Boundary → Application(control) → Core(entity) |
+| **RBS** | RED → Green → Stabilize + FR↔`D-*`/`U-*` 추적 |
+
+### P0 범위 / Out of Scope
+
+| Must (P0) | Out of Scope (P1) |
+|-----------|-------------------|
+| `meter`/`feet`/`yard` 변환·검증 | JSON/YAML 설정 (`D-CFG-01`) |
+| `unit:value` 파싱·E001~E004 | 동적 단위 등록 (`D-REG-01`) |
+| Dual-Track pytest RED→GREEN | `pip install -e .`, conftest, CI |
+| ECB 골격 `src/{boundary,control,entity}` | 실패 assert 주석 처리 |
 
 ---
 
@@ -39,103 +47,134 @@ main()만 있는 시작 코드에 테스트·설계·제출 마감이 동시에 
 
 | | 내용 |
 |---|---|
-| **Role** | 프로그래밍 수업, 부분 단위변환 과제를 받은 학생 |
-| **Goal** | 변환 숫자 재현 + 루트에서 pytest 실행 성공 + 실패 테스트를 주석 처리하지 않고 통과 |
-| **Input** | `UnitConverter.py`, README 비율·검증 요구, CLI 입력 (`meter:2.5`, 오입력 등) |
-| **Output** | `python -m pytest tests/` 초록, 변환·검증 assert 통과, 주석 처리 테스트 0개 |
+| **Role** | 부분 단위변환 과제 학생 |
+| **Goal** | FR-02 재현 + pytest green + FR-03~06 검증 통과 |
+| **Input** | `unit:value`, README 비율, `UnitConverter.py` |
+| **Output** | Track pytest PASS, 주석·skip·xfail 0 |
 
 ---
 
-## 성공 기준 (Mom Test 증거 연결)
-
-| # | 기준 | 연결 증거 |
-|---|------|-----------|
-| 1 | **첫 세션 30분 내** 루트에서 `python -m pytest tests/` import 에러 없이 실행 | ModuleNotFoundError 후 파일 닫음; TA 후 40분~1시간 만에 초록 |
-| 2 | 정상 변환 + 오입력 + 음수 테스트 통과, README 비율(3.28084 / 1.09361) 일치 | 손계산 대체; 실패 테스트 주석 처리 제출 |
-| 3 | 제출 시 실패·주석 assert **0개** | 「이 assert 빼고 제출해도 되냐」 패턴 차단 |
-
----
-
-## 이번 세션 범위 (Must Have)
-
-### 변환
-
-- 단위: `meter`, `feet`, `yard`
-- 비율: `1 meter = 3.28084 feet`, `1 meter = 1.09361 yard`
-- 변환·검증 로직은 **import 가능한 함수/클래스**로 분리 (`main()`은 입출력만)
-
-### 입력 검증
-
-- 형식 (`:` 없음), 숫자 (`meter:hello`), unknown unit, **음수** — 테스트로 고정, 주석 처리 금지
-
-### 테스트 구조
+## 프로젝트 구조
 
 ```
 UnitConverter_Agroup/
-├── UnitConverter.py
+├── UnitConverter.py              # 레거시 starter (점진 이전)
+├── pyproject.toml                # pythonpath = ["src"]
+├── src/
+│   ├── boundary/app.py           # CLI · E001~E005 emit
+│   ├── control/                  # (GREEN) 파싱·판정
+│   └── entity/
+│       ├── convert.py            # to_meter · convert_all
+│       ├── registry.py           # P1 동적 등록
+│       └── config.py             # P1 JSON 로드
 ├── tests/
-│   ├── __init__.py
-│   └── test_convert.py
-├── Report/
-│   └── 01.UnitConvert_ProblemDefinition_Report.md
-├── docs/
-│   └── PRD.md
-└── prompting/
-    ├── 01.step1-mom-test-prompt.md
-    └── 02.transcript-export.md
+│   ├── boundary/                 # Track A — UI (U-*)
+│   │   ├── test_u_in_01.py       # U-IN-01  "" → 형식 오류
+│   │   ├── test_u_in_02.py       # U-IN-02  meter → 형식 오류
+│   │   ├── test_u_in_03.py       # U-IN-03  meter:-1 → 음수 거부
+│   │   └── test_u_out_01.py      # U-OUT-01 meter:2.5 → 3줄
+│   └── entity/                   # Track B — Logic (D-*)
+│       ├── test_d_cnv_01.py      # D-CNV-01 to_meter
+│       ├── test_d_cnv_02.py      # D-CNV-02 convert_all
+│       ├── test_d_cnv_03.py      # D-CNV-03 meter 경유 일치
+│       ├── test_d_reg_01.py      # D-REG-01 (P1)
+│       └── test_d_cfg_01.py      # D-CFG-01 (P1)
+├── docs/PRD.md
+├── Report/01~03
+├── prompting/01~05
+└── .cursorrules · .cursor/skills · .cursor/commands
 ```
+
+---
+
+## 도메인 계약
+
+| 항목 | 규칙 |
+|------|------|
+| 입력 | `unit:value` (예 `meter:2.5`) |
+| 비율 SSOT | 1 m = **3.28084** ft, 1 m = **1.09361** yd |
+| 변환 | `feet`↔`yard`는 **meter 경유**만 |
+| 성공 출력 | meter / feet / yard **3줄** (boundary SSOT) |
+| 오류 | E001 형식 · E002 숫자 · E003 unknown · E004 음수 — **boundary만 emit** |
+
+테스트 ID 전체: [.cursor/skills/unitconverter-tdd/reference.md](./.cursor/skills/unitconverter-tdd/reference.md)
 
 ---
 
 ## 빠른 시작
 
 ```bash
+# 프로젝트 루트로 이동 (필수)
+cd UnitConverter_Agroup
+
 # 가상환경 (선택)
 python -m venv venv
 venv\Scripts\activate          # Windows
-# source venv/bin/activate     # macOS/Linux
 
-# 프로그램 실행 (프로젝트 루트)
+# 레거시 CLI
 python UnitConverter.py
 
-# 테스트 (프로젝트 루트 — cwd 중요)
-python -m pytest tests/
-python -m pytest tests/ --collect-only   # import·수집만 확인
+# 전체 테스트
+python -m pytest tests/ -v
+
+# Track별
+python -m pytest tests/boundary -v    # UI — U-IN / U-OUT
+python -m pytest tests/entity -v      # Logic — D-CNV / D-REG / D-CFG
+
+# 단일 RED 예시
+python -m pytest tests/entity/test_d_cnv_02.py::test_d_cnv_02_meter_to_feet -v
+python -m pytest tests/boundary/test_u_in_02.py::test_u_in_02_meter_no_colon_format_error -v
+
+# import·수집만 (Loop B)
+python -m pytest tests/ --collect-only
 ```
 
-**import 에러 시 우선 확인:** (1) cwd가 `UnitConverter.py`와 `tests/` 있는 루트인지 (2) `tests/__init__.py` 존재 (3) 테스트 대상이 `main()`이 아닌 분리된 함수/클래스인지
+**cwd:** `UnitConverter.py`와 `tests/`가 있는 **프로젝트 루트**. `pyproject.toml`의 `pythonpath = ["src"]`로 `entity`·`boundary` import.
 
 ---
 
-## 세션 Command (권장 순서)
+## TDD — RED / GREEN
 
-1. README·PRD 범위 확인 → **기본 3단위 + 검증**만
-2. `UnitConverter.py` 실행 → `meter:2.5`, `abc:1`, `meter:hello`, 음수 동작 기록
-3. 변환·검증 로직 분리
-4. `tests/__init__.py`, `tests/test_convert.py` 작성
-5. `python -m pytest tests/` → import OK
-6. assert: 정상 2~3 + 오입력 + 음수 → 전부 green
-7. 제출 게이트: 주석 assert 0, pytest green
+| Phase | 할 일 | 금지 |
+|-------|--------|------|
+| **RED** | `tests/`만 작성·실행, **FAIL 확인** | `src/` 로직 선행, skip/xfail |
+| **GREEN** | 해당 Layer `src/` 최소 구현 | assert 완화·삭제 |
+| **REFACTOR** | SSOT·이름·중복 정리 | 공개 계약 변경 |
+
+**RED 기대 실패:** `ModuleNotFoundError` 대신 워크북 **Then** 기준 `AssertionError` (예 `RED: U-IN-01 — format error`). import 스텁은 `src/`에만 둠.
+
+Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 
 ---
 
 ## Test Loop (품질 게이트)
 
-| Loop | 내용 | Pass |
+| Loop | 명령 | Pass |
 |------|------|------|
-| **A — 재현** | meter/feet/yard 변환 | README 비율·assert 일치 |
-| **B — import** | `python -m pytest tests/ --collect-only` | 수집 OK, ModuleNotFoundError 없음 |
-| **C — 검증** | abc:1, meter:hello, 음수, unknown unit | assert 전부 통과, 주석 0 |
+| **A — 재현** | `python -m pytest tests/entity -k cnv -v` | README 비율·D-CNV PASS |
+| **B — import** | `python -m pytest tests/ --collect-only` | 수집 OK |
+| **C — 검증** | `python -m pytest tests/boundary -v` | U-IN/U-OUT PASS |
 
-**세션 종료:** A + B + C 동시 Pass.
+**세션 Exit:** A + B + C 동시 Pass, skip/xfail 0.
+
+---
+
+## 현재 진행 상태 (2026-06-05)
+
+| 구분 | 상태 |
+|------|------|
+| RED 스켈레톤 (9 tests) | ✅ 수집·의미 있는 FAIL |
+| `src/` 스텁 | ✅ import 경로 (미구현) |
+| GREEN (`convert_all`, `run_cli` 등) | ❌ 다음 단계 |
+| `src/control/` | ❌ 미생성 |
 
 ---
 
 ## Mom Test 증거 (요약)
 
-- 「`sys.path` … **더 읽기 싫어졌어요**. **일단 변환부터** 하고 파일 닫음」
-- 「**pytest는 환경/경로 문제**, README 숫자만 맞으면 발표 때 덜 당황」
-- 「음수 테스트 실패 → **주석 처리하고 제출**」
+- 「**일단 변환부터** 하고 파일 닫음」— import 막힘
+- 「README 숫자만 맞으면」— 손계산 대체
+- 「**주석 처리하고 제출**」— 검증 미구현
 
 ---
 
@@ -143,19 +182,21 @@ python -m pytest tests/ --collect-only   # import·수집만 확인
 
 | 문서 | 설명 |
 |------|------|
-| [Report/01.UnitConvert_ProblemDefinition_Report.md](./Report/01.UnitConvert_ProblemDefinition_Report.md) | Mom Test 인터뷰·문제 정의·Rule/Command/Test Loop |
-| [docs/PRD.md](./docs/PRD.md) | 세션 범위 PRD (FR, Non-Goals, Test Loop) |
-| [prompting/01.step1-mom-test-prompt.md](./prompting/01.step1-mom-test-prompt.md) | STEP 1 Mom Test 인터뷰 프롬프트·규칙·종료 지시 |
-| [prompting/02.transcript-export.md](./prompting/02.transcript-export.md) | 유효 세션(2개) 통합 트랜스크립트 |
+| [docs/PRD.md](./docs/PRD.md) | FR-01~06 · INF · 1:1 Test ID (v0.2) |
+| [docs/IBAC-BCE-RBS.md](./docs/IBAC-BCE-RBS.md) | IBAC · BCE · RBS 가이드 |
+| [Report/01](./Report/01.UnitConvert_ProblemDefinition_Report.md) | Mom Test 문제 정의 |
+| [Report/02](./Report/02.UnitConverter_Session4_CursorDesign_Report.md) | Cursor 8계층 설계 |
+| [Report/03](./Report/03.UnitConverter_Session5_IBAC_RED_KDReport_Report.md) | IBAC·RED·kdreport |
+| [reference.md](./.cursor/skills/unitconverter-tdd/reference.md) | `D-*` / `U-*` SSOT |
+| [prompting/](./prompting/) | 세션별 Transcript export |
 
 ---
 
-## 후속 세션 (Not This Session)
+## 후속 (P1)
 
-- 설정 외부화 (JSON/YAML)
-- 동적 단위 등록
-- 출력 포맷 (JSON / CSV / table)
-- OCP/SRP 완성형 리팩터링
+- `D-REG-01` 동적 단위 · `D-CFG-01` JSON
+- `src/control/` 판정·파싱
+- OCP/SRP 완성형 · `--format json|csv|table`
 
 ---
 

@@ -1,6 +1,6 @@
 # TDD RED — 실패 테스트 먼저
 
-UnitConverter_Agroup · Dual-Track TDD **RED 단계만**. 한 번에 **테스트 1개**. 상세 규칙: `.cursorrules` · D-* ID: `.cursor/skills/unitconverter-tdd/reference.md`
+UnitConverter_Agroup · **RBS-R**(RED) · Dual-Track TDD. 한 번에 **테스트 1개**. BCE Layer 준수. 규칙: `.cursorrules` · 3축: `docs/IBAC-BCE-RBS.md` · D-*: `reference.md`
 
 ## 필수 선언
 

@@ -17,14 +17,16 @@
 
 ## Logic Track — `D-*`
 
-| ID | FR | Layer | 파일(예) | Given → Then |
-|----|-----|-------|----------|--------------|
-| D-PARSE-01 | FR-01 | control | `tests/control/test_d_parse_01.py` | `meter:2.5` → value=2.5, unit=meter |
-| D-CONV-01 | FR-02 | entity | `tests/entity/test_d_conv_01.py` | meter 2.5 → feet ≈ 8.2021 (3.28084) |
-| D-CONV-02 | FR-02 | entity | `tests/entity/test_d_conv_02.py` | meter 2.5 → yard ≈ 2.7340 (1.09361) |
-| D-CONV-03 | FR-02 | entity | `tests/entity/test_d_conv_03.py` | feet → meter (meter 경유) |
-| D-CONV-04 | FR-02 | entity | `tests/entity/test_d_conv_04.py` | yard → meter (meter 경유) |
-| D-CONV-05 | FR-02 | entity | `tests/entity/test_d_conv_05.py` | 입력 단위 → 3단위 값 일관 |
+> **도메인:** 길이 단위 변환 (`meter`/`feet`/`yard`). MagicSquare·격자·`find_blank_coords`·`D-LOC-*` **사용 안 함**.
+
+| ID | FR | Layer | 대상 함수(목표) | 파일(예) | Given → Then |
+|----|-----|-------|----------------|----------|--------------|
+| D-PARSE-01 | FR-01 | control | `parse_input` | `tests/control/test_d_parse_01.py` | `meter:2.5` → value=2.5, unit=meter |
+| D-CONV-01 | FR-02 | entity | `convert_all` | `tests/entity/test_d_conv_01.py` | `2.5 m` → feet **8.20210** (5자리, 3.28084) |
+| D-CONV-02 | FR-02 | entity | `convert_all` | `tests/entity/test_d_conv_02.py` | `2.5 m` → yard **2.73403** (1.09361) |
+| D-CONV-03 | FR-02 | entity | `to_meter` | `tests/entity/test_d_conv_03.py` | `1 feet` → **0.3048 m** (±ε) |
+| D-CONV-04 | FR-02 | entity | `to_meter` | `tests/entity/test_d_conv_04.py` | `1 yard` → meter (1/1.09361) |
+| D-CONV-05 | FR-02 | entity | `convert_all` | `tests/entity/test_d_conv_05.py` | feet→yard, **meter 경유** 일치 (직접 비율 금지) |
 | D-VAL-01 | FR-05 | control | `tests/control/test_d_val_01.py` | `meter` / `abc:1` → 형식 판정 (E001 조건, emit 없음) |
 | D-VAL-02 | FR-06 | control | `tests/control/test_d_val_02.py` | `meter:hello` → 숫자 판정 (E002) |
 | D-VAL-03 | FR-03 | control | `tests/control/test_d_val_03.py` | `cubit:1` → unknown 판정 (E003) |
@@ -45,9 +47,21 @@
 
 ---
 
-## 후속 (P1 — 테스트 ID 미할당)
+## 후속 (P1 — EXT · NFR)
 
-| Req | 비고 |
-|-----|------|
-| NFR-01 | `inch` 추가 시 기존 Converter 비수정 회귀 |
-| EXT-01~03 | `units.json`, 동적 등록, `--format` |
+| ID | Req | Layer | 대상 함수(목표) | Given → Then |
+|----|-----|-------|----------------|--------------|
+| D-REG-01 | EXT-02 | entity | `register` | `cubit` 0.4572 m 등록 → 변환 가능 |
+| D-CFG-01 | EXT-01 | entity | `load_config` | 깨진 JSON → `ConfigError` |
+| — | NFR-01 | entity | — | `inch` 추가 시 기존 Converter 비수정 회귀 |
+| — | EXT-03 | boundary | — | `--format json \| csv \| table` |
+
+---
+
+## RED 묶음 권장 순서 (Track B · entity)
+
+| 순서 | Test ID | pytest 예시 |
+|------|---------|-------------|
+| 1 | **D-CONV-01** | `tests/entity/test_d_conv_01.py::test_d_conv_01_meter_to_feet` |
+| 2 | D-CONV-03 | `tests/entity/test_d_conv_03.py::test_d_conv_03_feet_to_meter` |
+| 3 | D-CONV-05 | `tests/entity/test_d_conv_05.py::test_d_conv_05_feet_yard_via_meter` |

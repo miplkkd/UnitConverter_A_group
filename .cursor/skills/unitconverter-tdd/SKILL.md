@@ -1,14 +1,22 @@
 ---
 name: unitconverter-tdd
 description: >-
-  Dual-Track TDD·ECB 개발 시 Agent가 따를 절차. UnitConverter_Agroup에서
-  RED/GREEN/REFACTOR, Logic/UI Track, Loop A/B/C pytest, E001~E007·Mock 규칙을
-  적용할 때 사용. TDD, ECB, test_d_*, test_u_*, D-*, U-* 요청 시.
+  IBAC·BCE·RBS·Dual-Track TDD 절차. BCE(=ECB) 레이어, IBAC 입출력 흐름,
+  RBS RED/GREEN/REFACTOR, Logic/UI Track, Loop A/B/C, E001~E007·Mock.
+  TDD, BCE, ECB, IBAC, RBS, test_d_*, D-*, U-* 요청 시.
 ---
 
-# UnitConverter — Dual-Track TDD · ECB
+# UnitConverter — IBAC · BCE · RBS · Dual-Track TDD
 
-> 헌법: `.cursorrules` · 범위: `docs/PRD.md` · D-* ID: [reference.md](reference.md)
+> 헌법: `.cursorrules` · 3축: [docs/IBAC-BCE-RBS.md](../../docs/IBAC-BCE-RBS.md) · PRD: `docs/PRD.md` · D-*: [reference.md](reference.md)
+
+## 개발 3축 (요약)
+
+| 축 | Agent가 지킬 것 |
+|----|----------------|
+| **BCE** | `boundary→control→entity`, Layer별 `src/`·`tests/` 1:1 |
+| **IBAC** | Input 계약 → Boundary(I/O) → Application(control) → Core(entity) |
+| **RBS** | RED(테스트·FAIL) → Blue/Green(최소 구현·PASS) → Stabilize(REFACTOR·스펙) |
 
 ## 언제 이 Skill을 켜는지
 
