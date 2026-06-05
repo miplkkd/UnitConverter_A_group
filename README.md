@@ -72,6 +72,7 @@ UnitConverter_Agroup/
 │   │   ├── messages.py           # E001~E004 메시지 SSOT
 │   │   └── gui_app.py            # PyQt6 GUI (control 경유)
 │   ├── control/
+│   │   ├── parse.py              # unit:value 파싱 SSOT (REFACTOR)
 │   │   ├── convert_service.py    # 파싱·변환 오케스트레이션
 │   │   └── validation.py         # E001/E004 판정 (emit 없음)
 │   └── entity/
@@ -80,7 +81,7 @@ UnitConverter_Agroup/
 │       ├── registry.py           # D-REG-01 동적 등록
 │       └── config.py             # D-CFG-01 JSON 로드
 ├── tests/
-│   ├── _approval.py              # Golden Master 헬퍼
+│   ├── _approval.py              # GM · assert_cli_golden · assert_matches_golden
 │   ├── golden/                   # boundary stdout SSOT (*.approved.txt)
 │   ├── boundary/                 # Track A — UI (U-*)
 │   │   ├── test_u_in_01~03.py    # U-IN E001/E004
@@ -92,8 +93,8 @@ UnitConverter_Agroup/
 │       ├── test_d_reg_01.py
 │       └── test_d_cfg_01.py
 ├── docs/PRD.md
-├── Report/01~09
-├── prompting/01~11
+├── Report/01~11
+├── prompting/01~13
 └── .cursorrules · .cursor/skills · .cursor/commands
 ```
 
@@ -194,7 +195,7 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | U-IN-02 | `tests/golden/u_in_02_no_colon.approved.txt` | 콜론 없음 E001 |
 | U-IN-03 | `tests/golden/u_in_03_negative.approved.txt` | 음수 E004 |
 
-헬퍼: `tests/_approval.py` · U-GUI 테스트는 동일 golden 재사용.
+헬퍼: `tests/_approval.py` — `assert_cli_golden` · `run_gui_output` · `assert_matches_golden`
 
 ---
 
@@ -209,18 +210,36 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 
 ---
 
+## REFACTOR (`refactoring` 브랜치 · `/refactor-safe`)
+
+| # | 대상 | 파일 | GM diff |
+|---|------|------|:-------:|
+| 1 | `parse_unit_value` Extract | `control/parse.py` | 0 |
+| 2 | `assert_cli_golden` Extract | `tests/_approval.py` | 0 |
+| 3 | CLI Golden 4/4 헬퍼 통일 | `test_u_in_01~03`, `test_u_out_01` | 0 |
+| 4 | `run_gui_output` Extract | `tests/_approval.py` | 0 |
+| 5 | GUI Golden 4/4 헬퍼 통일 | `test_u_gui_01`, `test_u_gui_errors` | 0 |
+| 6 | entity Magic Number → SSOT | `test_d_cnv_01`, `test_d_cnv_02` | N/A |
+
+**원칙:** 외부 계약(출력·메시지) 변경 금지 · 매 커밋 pytest 13 PASS + GM matched.
+
+**PR:** [#4](https://github.com/miplkkd/UnitConverter_A_group/pull/4) (`refactoring` → `main`)
+
+---
+
 ## 현재 진행 상태 (2026-06-05)
 
 | 구분 | 상태 |
 |------|------|
 | Logic Track (D-CNV-01~03, D-REG-01, D-CFG-01) | ✅ GREEN 5/5 |
-| UI Track CLI (U-IN-01~03, U-OUT-01) | ✅ GREEN 4/4 |
+| UI Track CLI (U-IN-01~03, U-OUT-01) | ✅ GREEN 4/4 · `assert_cli_golden` |
 | Golden Master (boundary) | ✅ 4/4 matched |
-| PyQt GUI (U-GUI-01~04) | ✅ GREEN 4/4 |
-| `src/control/` 판정·오케스트레이션 | ✅ |
+| PyQt GUI (U-GUI-01~04) | ✅ GREEN 4/4 · `run_gui_output` |
+| REFACTOR (Session 11~13) | ✅ 6건 · GM diff 0 |
+| `src/control/` 판정·파싱·오케스트레이션 | ✅ |
 | **전체 pytest** | ✅ **13 passed** |
 | E002/E003 boundary emit | ❌ 후속 |
-| Report / Transcript | ✅ 01~09 / 01~11 |
+| Report / Transcript | ✅ 01~11 / 01~13 |
 
 ---
 
@@ -241,18 +260,19 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | [Report/01](./Report/01.UnitConvert_ProblemDefinition_Report.md) | Mom Test 문제 정의 |
 | [Report/02](./Report/02.UnitConverter_Session4_CursorDesign_Report.md) | Cursor 8계층 설계 |
 | [Report/03](./Report/03.UnitConverter_Session5_IBAC_RED_KDReport_Report.md) | IBAC·RED·kdreport |
-| [Report/04~09](./Report/) | RED · GREEN · Golden Master · PyQt GUI · Refactor |
+| [Report/04~11](./Report/) | RED · GREEN · Golden Master · PyQt · Refactor-safe |
+| [Report/11](./Report/11.UnitConverter_Session13_RefactorSafe_GUI_Entity_Report.md) | Session 13 GUI·entity REFACTOR |
 | [reference.md](./.cursor/skills/unitconverter-tdd/reference.md) | `D-*` / `U-*` SSOT |
-| [prompting/](./prompting/) | 세션별 Transcript export (01~11) |
+| [prompting/](./prompting/) | 세션별 Transcript export (01~13) |
 
 ---
 
 ## 후속 (P1)
 
-- E002/E003 boundary emit (`meter:hello`, `cubit:1`)
+- E002/E003 boundary emit (`meter:hello`, `cubit:1`) + GM
 - `D-REG-01`·`D-CFG-01` boundary/CLI 연동
 - OCP/SRP 완성형 · `--format json|csv|table`
-- `/refactor-safe` — U-IN-03/U-OUT-01 · GUI 테스트 헬퍼 (잔여)
+- `registry.register` 파라미터 rename · `UnitConverter.py` ECB wrapper (P2)
 
 ---
 

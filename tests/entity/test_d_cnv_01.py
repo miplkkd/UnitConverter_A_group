@@ -3,12 +3,11 @@
 
 def test_d_cnv_01_feet_to_meter():
     """D-CNV-01: 1 feet → 0.3048 m (±ε)."""
+    from entity.constants import FEET_TO_METER
     from entity.convert import to_meter
 
-    # Given / When
     result = to_meter(1, "feet")
 
-    # Then — Expected RED: 1 feet → 0.3048 m
-    assert abs(result - 0.3048) < 1e-4, (
-        f"RED: D-CNV-01 — 1 feet → 0.3048 m, got {result}"
+    assert abs(result - FEET_TO_METER) < 1e-4, (
+        f"RED: D-CNV-01 — 1 feet → {FEET_TO_METER} m, got {result}"
     )
