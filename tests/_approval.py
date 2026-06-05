@@ -60,7 +60,13 @@ def assert_cli_golden(capsys, raw: str, relative: str) -> None:
     assert_matches_golden(captured.out, relative)
 
 
-def run_gui_output(qtbot, raw: str) -> str:
+def run_gui_output(
+    qtbot,
+    raw: str,
+    *,
+    output_format: str | None = None,
+    load_config: bool = False,
+) -> str:
     """PyQt Convert 클릭 후 output_display plaintext (U-GUI SSOT)."""
     pytest.importorskip("PyQt6")
     from PyQt6.QtCore import Qt
@@ -68,6 +74,17 @@ def run_gui_output(qtbot, raw: str) -> str:
 
     window = UnitConverterWindow()
     qtbot.addWidget(window)
+
+    if output_format is not None:
+        index = window.format_combo.findData(output_format)
+        if index >= 0:
+            window.format_combo.setCurrentIndex(index)
+
+    if load_config:
+        qtbot.mouseClick(
+            window.load_config_button, Qt.MouseButton.LeftButton
+        )
+
     window.input_field.setText(raw)
     qtbot.mouseClick(window.convert_button, Qt.MouseButton.LeftButton)
     return window.output_display.toPlainText()

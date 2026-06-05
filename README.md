@@ -18,7 +18,7 @@
 
 ### 주제 (한 문장)
 
-**과제 첫날 변환·검증을 ECB Dual-Track pytest로 재현하고, Golden Master·PyQt GUI까지 수동·자동 확인 가능하게 만든다.**
+**P0 변환·검증 + P1 확장(units.json · register · `--format`) + GUI smoke를 ECB Dual-Track pytest 36건·Golden 7/7로 검증한다.**
 
 ### 진짜 문제
 
@@ -32,18 +32,15 @@
 | **IBAC** | Input → Boundary → Application(control) → Core(entity) |
 | **RBS** | RED → Green → Stabilize + FR↔`D-*`/`U-*` 추적 |
 
-### P0 범위 / Out of Scope
+### P0 / P1 (Session 14~15 — ✅ GREEN)
 
-| Must (P0) | Out of Scope (P1) |
-|-----------|-------------------|
-| `meter`/`feet`/`yard` 변환·검증 | `--format json\|csv\|table` (EXT-03) |
-| `unit:value` 파싱·E001~E004 (U-IN/U-OUT) | E002/E003 boundary emit (미연결) |
-| Dual-Track pytest RED→GREEN | `pip install -e .`, conftest, CI |
-| ECB `src/{boundary,control,entity}` | 실패 assert 주석 처리 |
-| Golden Master (boundary 4건) | — |
-| PyQt GUI + pytest-qt (U-GUI) | — |
-
-> **P1 선행 구현:** `D-REG-01`(동적 등록)·`D-CFG-01`(JSON 오류) entity 테스트는 **GREEN** — boundary/CLI 연동은 후속.
+| Must (P0) | P1 + 후속 — ✅ |
+|-----------|----------------|
+| `meter`/`feet`/`yard` 변환·검증 | **`units.json`** · **`register:unit:ratio`** · **`--format`** |
+| E001~E004 (U-IN/U-OUT/U-ERR/U-GUI) | REFACTOR config SSOT · Printer · register orchestration |
+| Dual-Track pytest | **`UnitConverter.py`** → `cli_main` ECB wrapper |
+| Golden Master 7/7 | PyQt GUI smoke **U-GUI-01~11** |
+| Out of Scope | CI · `pip install -e .` 패키징 |
 
 ---
 
@@ -54,7 +51,7 @@
 | **Role** | 부분 단위변환 과제 학생 |
 | **Goal** | FR-02 재현 + pytest green + FR-03~06 검증 통과 |
 | **Input** | `unit:value`, README 비율, CLI/GUI |
-| **Output** | Track pytest PASS (13), Golden Master 4/4, skip/xfail 0 |
+| **Output** | Track pytest PASS (36), Golden Master 7/7, skip/xfail 0 |
 
 ---
 
@@ -62,39 +59,52 @@
 
 ```
 UnitConverter_Agroup/
-├── UnitConverter.py              # 레거시 starter (점진 이전)
+├── UnitConverter.py              # ECB wrapper → boundary/cli_main
+├── units.json                    # P1 EXT-01 샘플 (meter 기준 배율)
 ├── run_gui.py                    # PyQt GUI 실행 (src 경로 자동 추가)
 ├── pyproject.toml                # pythonpath = ["src"], optional [gui]
 ├── src/
 │   ├── boundary/
-│   │   ├── app.py                # CLI · process_input · E001/E004 emit
-│   │   ├── format.py             # 성공 3줄 SSOT
+│   │   ├── app.py                # CLI · process_input · register · format/config
+│   │   ├── cli_main.py           # argparse --format / --config
+│   │   ├── format.py             # legacy 3줄 · table · json · csv SSOT
 │   │   ├── messages.py           # E001~E004 메시지 SSOT
 │   │   └── gui_app.py            # PyQt6 GUI (control 경유)
 │   ├── control/
-│   │   ├── parse.py              # unit:value 파싱 SSOT (REFACTOR)
+│   │   ├── parse.py              # unit:value 파싱 SSOT
 │   │   ├── convert_service.py    # 파싱·변환 오케스트레이션
-│   │   └── validation.py         # E001/E004 판정 (emit 없음)
+│   │   ├── register_service.py   # D-REG-02 register:unit:ratio 파싱
+│   │   └── validation.py         # E001~E004 판정 (emit 없음)
 │   └── entity/
-│       ├── constants.py          # 비율 SSOT
-│       ├── convert.py            # to_meter · convert_all
+│       ├── constants.py          # DEFAULT_UNIT_RATIOS SSOT
+│       ├── convert.py            # to_meter · convert_all · is_known_unit
 │       ├── registry.py           # D-REG-01 동적 등록
-│       └── config.py             # D-CFG-01 JSON 로드
+│       └── config.py             # D-CFG · get_meter_to_unit_ratios()
 ├── tests/
-│   ├── _approval.py              # GM · assert_cli_golden · assert_matches_golden
-│   ├── golden/                   # boundary stdout SSOT (*.approved.txt)
-│   ├── boundary/                 # Track A — UI (U-*)
+│   ├── _approval.py              # GM · assert_cli_golden · run_gui_output
+│   ├── fixtures/units.json
+│   ├── golden/                   # 7 GM files
+│   ├── boundary/
 │   │   ├── test_u_in_01~03.py    # U-IN E001/E004
-│   │   ├── test_u_out_01.py      # U-OUT 성공 3줄
-│   │   ├── test_u_gui_01.py      # U-GUI-01 PyQt 성공
-│   │   └── test_u_gui_errors.py  # U-GUI-02~04 PyQt 오류
-│   └── entity/                   # Track B — Logic (D-*)
+│   │   ├── test_u_out_01.py      # U-OUT legacy 3줄
+│   │   ├── test_u_err_02~03.py   # U-ERR E002/E003
+│   │   ├── test_u_cfg_01.py      # U-CFG-01
+│   │   ├── test_u_fmt_01.py      # U-FMT-01~03
+│   │   ├── test_u_reg_01~02.py   # U-REG
+│   │   ├── test_u_cli_01.py      # U-CLI argparse
+│   │   ├── test_u_gui_01.py      # U-GUI-01
+│   │   ├── test_u_gui_errors.py  # U-GUI-02~04
+│   │   └── test_u_gui_p1.py      # U-GUI-05~11 P1 smoke
+│   ├── control/
+│   │   ├── test_d_reg_02.py
+│   │   └── test_d_val_02~03.py   # D-VAL E002/E003
+│   └── entity/
 │       ├── test_d_cnv_01~03.py
 │       ├── test_d_reg_01.py
-│       └── test_d_cfg_01.py
-├── docs/PRD.md
-├── Report/01~11
-├── prompting/01~13
+│       └── test_d_cfg_01~03.py
+├── docs/PRD.md · docs/P1_NEW_FEATURES_TODO.md
+├── Report/01~13
+├── prompting/01~15
 └── .cursorrules · .cursor/skills · .cursor/commands
 ```
 
@@ -107,7 +117,9 @@ UnitConverter_Agroup/
 | 입력 | `unit:value` (예 `meter:2.5`) |
 | 비율 SSOT | 1 m = **3.28084** ft, 1 m = **1.09361** yd |
 | 변환 | `feet`↔`yard`는 **meter 경유**만 |
-| 성공 출력 | meter / feet / yard **3줄** (boundary SSOT) |
+| 성공 출력 | meter / feet / yard **3줄** (legacy) · **table/json/csv** (P1 `--format`) |
+| `units.json` | flat JSON · meter=1.0, feet=3.28084, yard=1.09361 (1 m → N target) |
+| register | `register:unit:ratio` (ratio = 1 unit → N meter, 예 `register:cubit:0.4572`) |
 | 오류 | E001 형식 · E002 숫자 · E003 unknown · E004 음수 — **boundary만 emit** |
 
 테스트 ID 전체: [.cursor/skills/unitconverter-tdd/reference.md](./.cursor/skills/unitconverter-tdd/reference.md)
@@ -124,18 +136,27 @@ cd UnitConverter_Agroup
 python -m venv venv
 venv\Scripts\activate          # Windows
 
-# 레거시 CLI (starter)
-python UnitConverter.py
+# 레거시 CLI (ECB wrapper → cli_main)
+python UnitConverter.py meter:2.5
+python UnitConverter.py meter:2.5 --format table
+python UnitConverter.py meter:2.5 --config units.json --format table
 
-# ECB CLI (boundary SSOT)
+# ECB CLI (boundary SSOT) — legacy 3줄
 python -c "from boundary.app import run_cli; run_cli('meter:2.5')"
 
-# 전체 테스트 (13)
+# P1 — table / json / csv
+python -c "from boundary.app import run_cli_with_format; run_cli_with_format('meter:2.5', 'table')"
+python -c "from boundary.app import run_cli_with_config; run_cli_with_config('meter:2.5', 'units.json', 'table')"
+
+# register → convert
+python -c "from boundary.app import run_cli; run_cli('register:cubit:0.4572'); run_cli('cubit:1')"
+
+# 전체 테스트 (36)
 python -m pytest tests/ -v
 
 # Track별
-python -m pytest tests/boundary -v    # UI — U-IN / U-OUT / U-GUI
-python -m pytest tests/entity -v      # Logic — D-CNV / D-REG / D-CFG
+python -m pytest tests/boundary -v    # UI — U-IN / U-OUT / U-GUI / U-CFG / U-FMT / U-REG
+python -m pytest tests/entity tests/control -v   # Logic — D-CNV / D-REG / D-CFG
 
 # Golden Master (boundary만)
 python -m pytest tests/boundary/test_u_in_01.py tests/boundary/test_u_in_02.py tests/boundary/test_u_in_03.py tests/boundary/test_u_out_01.py -v
@@ -148,8 +169,8 @@ $env:UPDATE_GOLDEN="1"; python -m pytest tests/boundary/ -v   # PowerShell
 pip install -e ".[gui]"    # PyQt6 + pytest-qt
 python run_gui.py
 
-# PyQt GUI 자동 테스트
-python -m pytest tests/boundary/test_u_gui_01.py tests/boundary/test_u_gui_errors.py -v
+# PyQt GUI 자동 테스트 (U-GUI-01~11)
+python -m pytest tests/boundary/test_u_gui_01.py tests/boundary/test_u_gui_errors.py tests/boundary/test_u_gui_p1.py -v
 
 # import·수집만 (Loop B)
 python -m pytest tests/ --collect-only
@@ -178,9 +199,9 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | Loop | 명령 | Pass |
 |------|------|------|
 | **A — 재현** | `python -m pytest tests/entity -k cnv -v` | README 비율·D-CNV PASS |
-| **B — import** | `python -m pytest tests/ --collect-only` | 수집 OK (13 tests) |
+| **B — import** | `python -m pytest tests/ --collect-only` | 수집 OK (36 tests) |
 | **C — 검증** | `python -m pytest tests/boundary -v` | U-IN/U-OUT/U-GUI PASS |
-| **D — Golden** | `python -m pytest tests/boundary/test_u_*.py -v` | GM 4/4 matched |
+| **D — Golden** | `python -m pytest tests/boundary/test_u_*.py -v` | GM 7/7 matched |
 
 **세션 Exit:** A + B + C + D 동시 Pass, skip/xfail 0.
 
@@ -190,10 +211,13 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 
 | Test ID | golden 파일 | 내용 |
 |---------|-------------|------|
-| U-OUT-01 | `tests/golden/u_out_01_meter_25.approved.txt` | `meter:2.5` 성공 3줄 |
+| U-OUT-01 | `tests/golden/u_out_01_meter_25.approved.txt` | `meter:2.5` 성공 3줄 (legacy) |
+| U-FMT-01 | `tests/golden/u_fmt_01_table_meter_25.approved.txt` | `meter:2.5` pipe table |
 | U-IN-01 | `tests/golden/u_in_01_empty.approved.txt` | 빈 입력 E001 |
 | U-IN-02 | `tests/golden/u_in_02_no_colon.approved.txt` | 콜론 없음 E001 |
 | U-IN-03 | `tests/golden/u_in_03_negative.approved.txt` | 음수 E004 |
+| U-ERR-02 | `tests/golden/u_err_02_non_numeric.approved.txt` | `meter:hello` E002 |
+| U-ERR-03 | `tests/golden/u_err_03_unknown_unit.approved.txt` | `furlong:1` E003 |
 
 헬퍼: `tests/_approval.py` — `assert_cli_golden` · `run_gui_output` · `assert_matches_golden`
 
@@ -204,9 +228,17 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | 항목 | 내용 |
 |------|------|
 | 실행 | `python run_gui.py` (프로젝트 루트) |
-| 구현 | `src/boundary/gui_app.py` — `process_input()` SSOT (CLI와 동일) |
-| 자동 테스트 | `test_u_gui_01.py`, `test_u_gui_errors.py` (pytest-qt) |
+| 구현 | `src/boundary/gui_app.py` — format 콤보 · Load units.json · `process_input_with_options()` |
+| P1 smoke (수동) | format **table** · **Load units.json** · register · `meter:hello`(E002) · `furlong:1`(E003) |
+| 자동 테스트 | `test_u_gui_01.py`, `test_u_gui_errors.py`, `test_u_gui_p1.py` (U-GUI-01~11) |
 | 의존성 | `pip install -e ".[gui]"` → PyQt6, pytest-qt |
+
+```bash
+# GUI P1 smoke (pytest-qt)
+python -m pytest tests/boundary/test_u_gui_p1.py -v
+# GUI 전체
+python -m pytest tests/boundary/test_u_gui_01.py tests/boundary/test_u_gui_errors.py tests/boundary/test_u_gui_p1.py -v
+```
 
 ---
 
@@ -221,9 +253,36 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | 5 | GUI Golden 4/4 헬퍼 통일 | `test_u_gui_01`, `test_u_gui_errors` | 0 |
 | 6 | entity Magic Number → SSOT | `test_d_cnv_01`, `test_d_cnv_02` | N/A |
 
-**원칙:** 외부 계약(출력·메시지) 변경 금지 · 매 커밋 pytest 13 PASS + GM matched.
+**원칙:** 외부 계약(출력·메시지) 변경 금지 · 매 커밋 pytest PASS + GM matched.
 
 **PR:** [#4](https://github.com/miplkkd/UnitConverter_A_group/pull/4) (`refactoring` → `main`)
+
+---
+
+## P1 New Features (`new_features` · Session 14~15)
+
+| EXT / 후속 | 기능 | Test ID | 상태 |
+|------------|------|---------|:----:|
+| EXT-01 | `units.json` | D-CFG-02/03, U-CFG-01, U-GUI-06 | ✅ |
+| EXT-02 | register CLI | D-REG-02, U-REG-01/02, U-GUI-07 | ✅ |
+| EXT-03 | `--format` | U-FMT-01~03, U-GUI-05/08/09 | ✅ |
+| 후속 | E002/E003 | D-VAL-02/03, U-ERR-02/03, U-GUI-10/11 | ✅ |
+| 후속 | argparse CLI | U-CLI-01, `UnitConverter.py` | ✅ |
+| REFACTOR | config · Printer · register | 1.7 · 2.7 · 3.8 | ✅ |
+
+**PR:** [#5](https://github.com/miplkkd/UnitConverter_A_group/pull/5) (`new_features` → `main`)
+
+**table 출력 예 (`meter:2.5`):**
+
+```
+| unit  | input | result |
+|-------|-------|--------|
+| meter | 2.5   | 2.5    |
+| feet  | 2.5   | 8.2021 |
+| yard  | 2.5   | 2.7340 |
+```
+
+상세 Todo: [docs/P1_NEW_FEATURES_TODO.md](./docs/P1_NEW_FEATURES_TODO.md)
 
 ---
 
@@ -231,15 +290,14 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 
 | 구분 | 상태 |
 |------|------|
-| Logic Track (D-CNV-01~03, D-REG-01, D-CFG-01) | ✅ GREEN 5/5 |
-| UI Track CLI (U-IN-01~03, U-OUT-01) | ✅ GREEN 4/4 · `assert_cli_golden` |
-| Golden Master (boundary) | ✅ 4/4 matched |
-| PyQt GUI (U-GUI-01~04) | ✅ GREEN 4/4 · `run_gui_output` |
-| REFACTOR (Session 11~13) | ✅ 6건 · GM diff 0 |
-| `src/control/` 판정·파싱·오케스트레이션 | ✅ |
-| **전체 pytest** | ✅ **13 passed** |
-| E002/E003 boundary emit | ❌ 후속 |
-| Report / Transcript | ✅ 01~11 / 01~13 |
+| Logic Track (D-CNV, D-REG, D-CFG, D-VAL) | ✅ GREEN 10/10 |
+| UI Track CLI | ✅ GREEN 14/14 |
+| PyQt GUI (U-GUI-01~11) | ✅ GREEN 11/11 · P1 smoke |
+| Golden Master (boundary) | ✅ 7/7 matched |
+| REFACTOR (Session 11~13 + P1) | ✅ config SSOT · Printer · register |
+| P1 EXT-01~03 + 후속 | ✅ |
+| **전체 pytest** | ✅ **36 passed** |
+| Report / Transcript | ✅ 01~13 / 01~15 |
 
 ---
 
@@ -260,19 +318,20 @@ Cursor: `/tdd-red` · `/review-ecb` · `/kdreport`
 | [Report/01](./Report/01.UnitConvert_ProblemDefinition_Report.md) | Mom Test 문제 정의 |
 | [Report/02](./Report/02.UnitConverter_Session4_CursorDesign_Report.md) | Cursor 8계층 설계 |
 | [Report/03](./Report/03.UnitConverter_Session5_IBAC_RED_KDReport_Report.md) | IBAC·RED·kdreport |
-| [Report/04~11](./Report/) | RED · GREEN · Golden Master · PyQt · Refactor-safe |
-| [Report/11](./Report/11.UnitConverter_Session13_RefactorSafe_GUI_Entity_Report.md) | Session 13 GUI·entity REFACTOR |
+| [Report/04~13](./Report/) | RED · GREEN · P1 · GUI smoke |
+| [Report/13](./Report/13.UnitConverter_Session15_P1_Followup_GUI_Smoke_Report.md) | Session 15 P1 후속 |
+| [docs/P1_NEW_FEATURES_TODO.md](./docs/P1_NEW_FEATURES_TODO.md) | P1 Todo · SSOT |
 | [reference.md](./.cursor/skills/unitconverter-tdd/reference.md) | `D-*` / `U-*` SSOT |
-| [prompting/](./prompting/) | 세션별 Transcript export (01~13) |
+| [prompting/](./prompting/) | 세션별 Transcript export (01~15) |
+| [ARRR_Teacher_이번수업_PR_자가리뷰.md](./ARRR_Teacher_이번수업_PR_자가리뷰.md) | ARRR teacher persona PR #1~#5 자가리뷰 |
 
 ---
 
-## 후속 (P1)
+## 후속
 
-- E002/E003 boundary emit (`meter:hello`, `cubit:1`) + GM
-- `D-REG-01`·`D-CFG-01` boundary/CLI 연동
-- OCP/SRP 완성형 · `--format json|csv|table`
-- `registry.register` 파라미터 rename · `UnitConverter.py` ECB wrapper (P2)
+- CI / `pip install -e .` 패키징
+- OCP/SRP 문서화 · PRD v0.3 sync
+- `/review-ecb` 공식 점검
 
 ---
 
