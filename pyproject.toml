@@ -1,0 +1,14 @@
+[project]
+name = "unitconverter-agroup"
+version = "0.1.0"
+description = "UnitConverter_Agroup — ECB + Dual-Track TDD harness"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
