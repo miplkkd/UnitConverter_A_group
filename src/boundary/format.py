@@ -1,5 +1,7 @@
 """Boundary — 성공 출력 SSOT (legacy 3줄 · table · json · csv)."""
 
+from typing import Callable
+
 import json
 
 OUTPUT_UNIT_ORDER = ("meter", "feet", "yard")
@@ -68,4 +70,47 @@ def format_csv_lines(
         inp = _format_input_cell(input_value)
         lines.append(f"{unit},{inp},{res}")
     return lines
+
+
+def _format_legacy(
+    input_value: float, input_unit: str, converted: dict[str, float]
+) -> str:
+    return "\n".join(format_conversion_lines(input_value, input_unit, converted))
+
+
+def _format_table(
+    input_value: float, input_unit: str, converted: dict[str, float]
+) -> str:
+    return "\n".join(format_table_lines(input_value, input_unit, converted))
+
+
+def _format_json(
+    input_value: float, input_unit: str, converted: dict[str, float]
+) -> str:
+    return format_json_output(input_value, input_unit, converted)
+
+
+def _format_csv(
+    input_value: float, input_unit: str, converted: dict[str, float]
+) -> str:
+    return "\n".join(format_csv_lines(input_value, input_unit, converted))
+
+
+_OUTPUT_FORMATTERS: dict[str, Callable[..., str]] = {
+    "legacy": _format_legacy,
+    "table": _format_table,
+    "json": _format_json,
+    "csv": _format_csv,
+}
+
+
+def format_success_output(
+    output_format: str,
+    input_value: float,
+    input_unit: str,
+    converted: dict[str, float],
+) -> str:
+    """REFACTOR 3.8: Printer Strategy — legacy | table | json | csv."""
+    formatter = _OUTPUT_FORMATTERS.get(output_format, _format_legacy)
+    return formatter(input_value, input_unit, converted)
 

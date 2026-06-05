@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from entity.constants import DEFAULT_UNIT_RATIOS
 
 class ConfigError(Exception):
     pass
@@ -35,5 +36,13 @@ def apply_units_config(path: str) -> None:
 
 
 def get_active_units() -> dict[str, float] | None:
-    """적용된 units.json 비율 (없으면 constants 기본값)."""
+    """적용된 units.json 비율 (없으면 None)."""
     return _active_units
+
+
+def get_meter_to_unit_ratios() -> dict[str, float]:
+    """REFACTOR 1.7: constants 기본값 또는 적용된 config SSOT."""
+    active = get_active_units()
+    if active:
+        return dict(active)
+    return dict(DEFAULT_UNIT_RATIOS)

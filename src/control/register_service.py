@@ -1,4 +1,10 @@
-"""Control — register:unit:ratio 파싱 (emit 없음)."""
+"""Control — register:unit:ratio 파싱·오케스트레이션 (emit 없음)."""
+
+from entity.registry import register
+
+
+class RegisterError(Exception):
+    """잘못된 register 형식."""
 
 
 def parse_register(raw: str) -> tuple[str, float]:
@@ -13,3 +19,13 @@ def parse_register(raw: str) -> tuple[str, float]:
     except ValueError as exc:
         raise ValueError("invalid register ratio") from exc
     return parts[1], ratio
+
+
+def execute_register(raw: str) -> str:
+    """D-REG-02 orchestration: parse → entity register → 확인 메시지."""
+    try:
+        unit, ratio = parse_register(raw)
+    except ValueError as exc:
+        raise RegisterError(str(exc)) from exc
+    register(unit, ratio)
+    return f"Registered: {unit} ({ratio} m per unit)"
