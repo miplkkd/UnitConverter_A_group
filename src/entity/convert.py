@@ -1,21 +1,30 @@
-"""Entity layer — meter-based unit conversion."""
+"""Entity layer — meter-based unit conversion (meter 경유 SSOT)."""
 
 from entity.constants import (
+    FEET_TO_METER,
     METER_TO_FEET,
     METER_TO_YARD,
     UNIT_FEET,
     UNIT_METER,
     UNIT_YARD,
+    YARD_TO_METER,
 )
 
 
-def convert_all(value: float, unit: str) -> dict[str, float]:
-    """Convert value from unit to meter, feet, and yard."""
+def to_meter(value: float, unit: str) -> float:
+    """입력 단위·값 → meter."""
     if unit == UNIT_METER:
-        meters = value
-    else:
-        raise ValueError(f"unsupported unit: {unit}")
+        return value
+    if unit == UNIT_FEET:
+        return value * FEET_TO_METER
+    if unit == UNIT_YARD:
+        return value * YARD_TO_METER
+    raise ValueError(f"unsupported unit: {unit}")
 
+
+def convert_all(value: float, unit: str) -> dict[str, float]:
+    """입력 → meter/feet/yard (meter 경유)."""
+    meters = to_meter(value, unit)
     return {
         UNIT_METER: meters,
         UNIT_FEET: meters * METER_TO_FEET,
