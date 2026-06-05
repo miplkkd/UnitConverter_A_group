@@ -1,7 +1,7 @@
 """Boundary CLI — control 경유 판정 · E001~E005 emit."""
 
-from boundary.messages import E001_FORMAT_MSG
-from control.validation import E001, format_error_code
+from boundary.messages import E001_FORMAT_MSG, E004_NEGATIVE_MSG
+from control.validation import E001, E004, format_error_code, negative_error_code
 
 
 def run_cli(raw: str) -> None:
@@ -9,3 +9,7 @@ def run_cli(raw: str) -> None:
     code = format_error_code(raw)
     if code == E001:
         print(E001_FORMAT_MSG)
+        return
+    code = negative_error_code(raw)
+    if code == E004:
+        print(E004_NEGATIVE_MSG)
