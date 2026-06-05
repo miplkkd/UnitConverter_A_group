@@ -51,10 +51,20 @@
 
 | ID | Req | Layer | 대상 함수(목표) | Given → Then |
 |----|-----|-------|----------------|--------------|
-| D-REG-01 | EXT-02 | entity | `register` | `cubit` 0.4572 m 등록 → 변환 가능 |
 | D-CFG-01 | EXT-01 | entity | `load_config` | 깨진 JSON → `ConfigError` |
+| D-CFG-02 | EXT-01 | entity | `load_units_config` | flat `units.json` → `{meter:1.0, feet:3.28084, yard:1.09361}` |
+| D-CFG-03 | EXT-01 | entity | `apply_units_config` | apply 후 `meter:2.5` → feet **8.2021**, yard **2.7340** |
+| D-REG-01 | EXT-02 | entity | `register` | `cubit` 0.4572 m 등록 → 변환 가능 |
+| D-REG-02 | EXT-02 | control | `parse_register` | `register:cubit:0.4572` 파싱 |
+| U-CFG-01 | EXT-01 | boundary | `run_cli_with_config` | config 로드 후 `meter:2.5` 3줄 |
+| U-REG-01 | EXT-02 | boundary | `run_cli` register | register 후 `cubit:1` 변환 |
+| U-REG-02 | EXT-02 | boundary | `run_cli` register | 잘못된 register → E001 |
+| U-FMT-01 | EXT-03 | boundary | `run_cli_with_format` | `--format table` → pipe `\| unit \| input \| result \|` GM |
+| U-FMT-01b | EXT-03 | boundary | `run_cli_with_format` | table 헤더 + 3 data rows |
+| U-FMT-02 | EXT-03 | boundary | `run_cli_with_format` | `--format json` → `[{unit,input,result}]` |
+| U-FMT-03 | EXT-03 | boundary | `run_cli_with_format` | `--format csv` → `unit,input,result` + rows |
 | — | NFR-01 | entity | — | `inch` 추가 시 기존 Converter 비수정 회귀 |
-| — | EXT-03 | boundary | — | `--format json \| csv \| table` |
+| — | EXT-03 | boundary | — | `--format json \| csv \| table` (Printer OCP) |
 
 ---
 

@@ -8,6 +8,9 @@ class ConfigError(Exception):
     pass
 
 
+_active_units: dict[str, float] | None = None
+
+
 def load_config(path: str) -> dict:
     """D-CFG-01: JSON 파일 로드, 깨진 JSON → ConfigError."""
     try:
@@ -15,3 +18,22 @@ def load_config(path: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError as exc:
         raise ConfigError(f"invalid JSON in {path}") from exc
+
+
+def load_units_config(path: str) -> dict[str, float]:
+    """D-CFG-02: flat units.json → meter 기준 배율 dict."""
+    data = load_config(path)
+    if not isinstance(data, dict):
+        raise ConfigError(f"invalid units config in {path}")
+    return {str(name): float(ratio) for name, ratio in data.items()}
+
+
+def apply_units_config(path: str) -> None:
+    """D-CFG-03: units.json 비율을 entity 변환 SSOT에 반영."""
+    global _active_units
+    _active_units = load_units_config(path)
+
+
+def get_active_units() -> dict[str, float] | None:
+    """적용된 units.json 비율 (없으면 constants 기본값)."""
+    return _active_units
