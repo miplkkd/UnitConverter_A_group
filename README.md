@@ -323,6 +323,7 @@ python -m pytest tests/boundary/test_u_gui_01.py tests/boundary/test_u_gui_error
 | [docs/P1_NEW_FEATURES_TODO.md](./docs/P1_NEW_FEATURES_TODO.md) | P1 Todo · SSOT |
 | [reference.md](./.cursor/skills/unitconverter-tdd/reference.md) | `D-*` / `U-*` SSOT |
 | [prompting/](./prompting/) | 세션별 Transcript export (01~15) |
+| [ARRR_Teacher_이번수업_PR_자가리뷰.md](./ARRR_Teacher_이번수업_PR_자가리뷰.md) | ARRR teacher persona PR #1~#5 자가리뷰 |
 
 ---
 
