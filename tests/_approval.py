@@ -6,6 +6,8 @@ import difflib
 import os
 from pathlib import Path
 
+import pytest
+
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 
 
@@ -47,3 +49,25 @@ def assert_matches_golden(actual: str, relative: str) -> None:
         )
     )
     raise AssertionError(f"Golden mismatch: {relative}\n{diff}")
+
+
+def assert_cli_golden(capsys, raw: str, relative: str) -> None:
+    """run_cli(raw) stdout → golden matched (U-IN/U-OUT SSOT)."""
+    from boundary.app import run_cli
+
+    run_cli(raw)
+    captured = capsys.readouterr()
+    assert_matches_golden(captured.out, relative)
+
+
+def run_gui_output(qtbot, raw: str) -> str:
+    """PyQt Convert 클릭 후 output_display plaintext (U-GUI SSOT)."""
+    pytest.importorskip("PyQt6")
+    from PyQt6.QtCore import Qt
+    from boundary.gui_app import UnitConverterWindow
+
+    window = UnitConverterWindow()
+    qtbot.addWidget(window)
+    window.input_field.setText(raw)
+    qtbot.mouseClick(window.convert_button, Qt.MouseButton.LeftButton)
+    return window.output_display.toPlainText()

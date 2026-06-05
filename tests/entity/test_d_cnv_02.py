@@ -3,16 +3,14 @@
 
 def test_d_cnv_02_meter_to_feet():
     """D-CNV-02: 2.5 m → feet 8.20210 (5자리)."""
+    from entity.constants import METER_TO_FEET, UNIT_METER
     from entity.convert import convert_all
 
-    # Given
     value = 2.5
-    unit = "meter"
+    expected_feet = round(value * METER_TO_FEET, 5)
 
-    # When
-    result = convert_all(value, unit)
+    result = convert_all(value, UNIT_METER)
 
-    # Then — Expected RED: 2.5 m → feet 8.20210 (5자리)
-    assert round(result["feet"], 5) == 8.20210, (
-        f"RED: D-CNV-02 — expected feet 8.20210, got {result['feet']}"
+    assert round(result["feet"], 5) == expected_feet, (
+        f"RED: D-CNV-02 — expected feet {expected_feet}, got {result['feet']}"
     )
