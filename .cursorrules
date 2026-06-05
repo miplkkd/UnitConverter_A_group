@@ -1,0 +1,68 @@
+# UnitConverter_Agroup — Cursor Rules
+
+## 도메인
+- 길이 단위 변환: `meter`, `feet`, `yard` (입력 형식 `unit:value`, 예 `meter:2.5`)
+- meter 기준 비율 SSOT: `1 m = 3.28084 ft`, `1 m = 1.09361 yd`
+- 입력 검증: 형식(`:`), 숫자, unknown unit, 음수
+- 세션 범위: 변환 재현 + pytest green + 검증 테스트 통과 (JSON/동적 단위/출력 포맷/Golden Master는 후속)
+
+## 입출력 · E001~E007
+- 성공: `unit:value` 입력 → README 비율 기준 meter/feet/yard **3줄** 출력 (형식·반올림·단위 표기는 SSOT 한 곳)
+- 실패: boundary가 처리; 에러 코드·CLI 메시지는 SSOT
+- E001: `:` 없음 (형식) | E002: 숫자 아님 | E003: unknown unit | E004: 음수
+- E005: 출력 형식/계약 위반 (boundary) | E006~E007: 예약 (본 세션 범위 밖)
+- `entity`/`control`은 **E001~E004를 raise/return하지 않는다** (emit은 boundary)
+- Golden Master·`tests/golden/*.approved.txt`: **본 세션 미사용**; 후속 도입 시 사용자 명시 승인 없이 AI가 갱신 금지
+
+## 아키텍처 (ECB)
+- 의존 방향: `boundary → control → entity` (역방향 import 금지)
+- `entity`: 변환·판정 **순수 로직**(meter 기준)만; `entity` 패키지 내부·Python stdlib만 import; `control`/`boundary` import 금지
+- `control`: 입력 검증 **판정 로직**·오케스트레이션; `entity`만 import; `boundary` import 금지
+- `boundary`: CLI/I/O·프레젠테이션·**에러 코드·메시지 emit** (로직 금지); `control`만 호출; `entity` 직접 import·호출 금지
+- 패키지: `src/entity`, `src/control`, `src/boundary`
+- 레거시 `UnitConverter.py`는 점진 이전; 신규 로직은 `src/`에 추가
+
+## Dual-Track TDD
+- **Logic Track** (`entity`, `control`): Domain Mock 금지 — 실제 객체·순수 함수로 검증
+- **UI Track** (`boundary`): Mock/Stub/Fake I/O만 허용 (stdin, stdout, `capsys`, `monkeypatch`, `StringIO` 등); control은 real 사용
+- Logic Track (`tests/entity`, `tests/control`, `test_d_*`): entity/control **Mock·patch 금지**
+- UI Track (`tests/boundary`, `test_u_*`): I/O Mock만 허용
+- 테스트 디렉터리: `tests/entity`, `tests/control`, `tests/boundary` (레이어 1:1)
+- PRD FR-08 `tests/test_convert.py`는 **레거시 Loop B 통과용**; 신규 테스트는 Track 디렉터리에만 추가
+- 테스트 ID: Logic `D-*`, UI `U-*` — 함수 docstring 또는 이름에 포함 (FR-04~07 ↔ U-*, 변환 ↔ D-*)
+- 파일명: Logic `test_d_*`, UI `test_u_*` (예 `test_d_convert_meter_to_feet.py`)
+
+## TDD 규칙
+- 사이클: **RED → GREEN → REFACTOR** (한 번에 한 테스트)
+- RED: 해당 테스트 **FAIL 확인 전** `src/`·`UnitConverter.py` 로직 수정 금지; RED 수용: `ModuleNotFoundError` 또는 `pytest.fail("RED: D-* …")`
+- GREEN: 해당 Track pytest **전부 PASS** 후 REFACTOR
+- assert 완화·주석 처리·삭제·`skip`·`xfail`로 green 만들기 **금지**
+- 실패 시 **구현/검증 수정**으로 통과
+- MagicConstant SSOT: `3.28084`, `1.09361`, `meter`/`feet`/`yard`, 오류 키·메시지 — 한 곳만; 테스트·구현 리터럴 산재 금지 (테스트는 SSOT import)
+- 실행: 프로젝트 루트 `python -m pytest tests/` (`pyproject.toml` `pythonpath = ["src"]`)
+- pytest 상세(`-k`, Track별 실행)는 Skill/Command에서; Rule은 전체 실행·Loop B `--collect-only`만 참조
+
+## Test Loop (세션 Exit)
+- **Loop A — 재현**: meter/feet/yard 변환 assert, README 비율 일치
+- **Loop B — import·수집**: `python -m pytest tests/ --collect-only` — ModuleNotFoundError 없음
+- **Loop C — 검증·판정**: abc:1, meter:hello, 음수, unknown unit — assert 전부 통과
+- **Exit**: Loop A + B + C 동시 Pass, 주석·skip·xfail assert **0개**
+- import 막힘: cwd=루트 → `--collect-only` → 함수 분리 → `tests/__init__.py`; `pip install -e .`·conftest 이번 세션 제안 금지
+
+## AI 행동
+- **한국어**로 응답
+- TDD 작업 시 매 턴 선언: `Phase`(RED/GREEN/REFACTOR) · `Layer`(entity/control/boundary) · `Track`(Logic/UI)
+- 범위 최소화: 요청·실패 테스트·해당 레이어만 수정
+- Mom Test/PRD 범위 밖(JSON, 동적 단위, conftest/coverage/CI, `pip install -e .` 선행) 제안 금지
+- **git commit / push**는 사용자가 명시적으로 요청할 때만 수행
+- Harness·문서·테스트 추가 시 기존 넘버링(`01.`, `test_d_*`)·ECB 경계 유지
+- 문서 우선순위: `.cursorrules` < `Report/*` < `docs/PRD.md` (충돌 시 PRD; ECB·8계층은 Report)
+
+## 금지 (Quick)
+- entity에서 control/boundary import; boundary에서 entity 직접 호출
+- control에서 boundary import
+- Logic Track에서 Domain Mock·entity/control patch
+- entity/control에서 E001~E004 emit
+- 실패 테스트 제거·약화로 제출 판정만 맞추기
+- 솔루션 선행 리팩터(OCP 풀 세트)로 변환·테스트를 미루기
+- Golden Master/snapshot 파일 사용자 승인 없이 AI 갱신 (후속 세션)

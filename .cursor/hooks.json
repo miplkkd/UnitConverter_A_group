@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/session-init.sh"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": ".cursor/hooks/hint-after-src-test-write.sh",
+        "matcher": "Write"
+      }
+    ]
+  }
+}
