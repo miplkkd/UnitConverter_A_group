@@ -9,6 +9,7 @@ from entity.constants import (
     UNIT_YARD,
     YARD_TO_METER,
 )
+from entity.registry import meters_per_unit
 
 
 def to_meter(value: float, unit: str) -> float:
@@ -19,6 +20,9 @@ def to_meter(value: float, unit: str) -> float:
         return value * FEET_TO_METER
     if unit == UNIT_YARD:
         return value * YARD_TO_METER
+    ratio = meters_per_unit(unit)
+    if ratio is not None:
+        return value * ratio
     raise ValueError(f"unsupported unit: {unit}")
 
 
