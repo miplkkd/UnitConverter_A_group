@@ -11,9 +11,8 @@ def test_u_out_01_meter_25_three_lines(capsys):
     # When
     run_cli(raw)
     captured = capsys.readouterr()
-    lines = [ln for ln in captured.out.splitlines() if ln.strip()]
 
-    # Then — Expected RED: 3줄 이상 출력 (meter/feet/yard)
-    assert len(lines) >= 3, (
-        f"RED: U-OUT-01 — expected 3+ output lines, got {len(lines)}"
-    )
+    # Then — Golden Master: meter:2.5 성공 stdout 3줄 SSOT
+    from tests._approval import assert_matches_golden
+
+    assert_matches_golden(captured.out, "u_out_01_meter_25.approved.txt")

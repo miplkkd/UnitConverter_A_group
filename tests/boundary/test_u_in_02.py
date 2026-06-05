@@ -11,10 +11,8 @@ def test_u_in_02_meter_no_colon_format_error(capsys):
     # When
     run_cli(raw)
     captured = capsys.readouterr()
-    output = (captured.out + captured.err).lower()
 
-    # Then — Expected RED: 형식 오류 (E001)
-    assert output.strip(), "RED: U-IN-02 — missing colon must emit format error"
-    assert "format" in output or "invalid" in output or ":" in output, (
-        "RED: U-IN-02 — expected format error for 'meter' without colon"
-    )
+    # Then — Golden Master: 콜론 없음 E001 stdout SSOT
+    from tests._approval import assert_matches_golden
+
+    assert_matches_golden(captured.out, "u_in_02_no_colon.approved.txt")
